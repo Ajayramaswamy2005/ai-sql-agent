@@ -25,7 +25,7 @@ app.add_middleware(
 
 
 @app.post("/query", response_model=QueryResponse)
-async def query(request: QueryRequest):
+def query(request: QueryRequest):
     try:
         history = memory.get_history(request.session_id)
         memory.add_message(request.session_id, "user", request.query)
@@ -67,7 +67,7 @@ async def query(request: QueryRequest):
 
 
 @app.get("/schema", response_model=SchemaResponse)
-async def schema():
+def schema():
     try:
         tables = get_table_names()
         schema_info = get_schema_info()
@@ -77,7 +77,7 @@ async def schema():
 
 
 @app.get("/health", response_model=HealthResponse)
-async def health():
+def health():
     db_connected = False
     try:
         from sqlalchemy import text

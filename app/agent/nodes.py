@@ -1,8 +1,9 @@
+import re
+
 from langchain_groq import ChatGroq
 from app.agent.state import AgentState
 from app.agent.prompts import (
     SYSTEM_PROMPT,
-    VALIDATION_PROMPT,
     ANSWER_PROMPT,
     RETRY_PROMPT,
 )
@@ -45,14 +46,14 @@ def generate_sql(state: AgentState) -> dict:
 def validate_sql(state: AgentState) -> dict:
     sql = state["generated_sql"]
 
+    if not sql:
+        return {"validation_error": "No SQL was generated."}
+
     dangerous_keywords = ["DELETE", "DROP", "TRUNCATE", "ALTER", "INSERT", "UPDATE", "CREATE"]
-    sql_upper = sql.upper()
     for keyword in dangerous_keywords:
-        if keyword in sql_upper:
-            return {
-                "validation_error": f"Blocked: {keyword} statements are not allowed.",
-                "generated_sql": "",
-            }
+        # Match whole words only so columns like created_at / updated_at are not blocked
+        if re.search(rf"\b{keyword}\b", sql, re.IGNORECASE):
+            return {"validation_error": f"Blocked: {keyword} statements are not allowed."}
 
     error = validate_sql_dry_run(sql)
     if error:
@@ -112,9 +113,8 @@ def generate_answer(state: AgentState) -> dict:
     result = state.get("sql_result", {})
 
     if not result.get("success"):
-        return {
-            "final_answer": f"Query execution failed: {result.get('error', 'Unknown error')}"
-        }
+        error = result.get("error") or state.get("validation_error") or "Unknown error"
+        return {"final_answer": f"Query execution failed: {error}"}
 
     rows = result.get("rows", [])
     columns = result.get("columns", [])

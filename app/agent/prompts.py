@@ -11,7 +11,7 @@ RULES:
 5. Never generate DELETE, DROP, TRUNCATE, ALTER, INSERT, UPDATE, or CREATE statements.
 6. Always qualify columns with table names in multi-table queries.
 7. Use proper aggregation with GROUP BY when needed.
-8. If the question is ambiguous, make a reasonable assumption and note it in your response.
+8. If the question is ambiguous, make a reasonable assumption — but still respond with SQL only.
 """
 
 VALIDATION_PROMPT = """You are a SQL validator. Review the following SQL query for correctness and safety.
